@@ -3,6 +3,7 @@ import spotipy
 import json
 import calendar
 import datetime
+import pytz
 
 class LambdaException(Exception):
     pass
@@ -43,7 +44,8 @@ def show_tracks_album_uri(track):
     return album_uri
 
 def playlist_name():
-    lastFriday = datetime.date.today()
+    EST = pytz.timezone('America/New_York')
+    lastFriday = datetime.datetime.now(EST)
     oneday = datetime.timedelta(days=1)
 
     while lastFriday.weekday() != calendar.FRIDAY:
