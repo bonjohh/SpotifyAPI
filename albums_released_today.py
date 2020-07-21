@@ -40,7 +40,8 @@ def main(user_id):
     df = pd.DataFrame(album_list, columns=['release_date_col', 'album_name_col', 'artist_name_col'])
     df.drop_duplicates('album_name_col', inplace=True)
 
-    today = datetime.date.today()
+    EST = pytz.timezone('America/New_York')
+    today = datetime.datetime.now(EST)
     today = today.strftime("%m-%d")
 
     print(df[df['release_date_col'].str.contains(today)])
