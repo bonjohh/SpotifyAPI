@@ -116,40 +116,47 @@ def add_new_music_playlist_details(sp, user_id, playlist_uri, event):
     playlist_desc = playlist_desc1 + playlist_desc2
     count = 0
     while count < playlist_number:
-        if event['SPOTIFY_NM'] and playlist_SPOTIFY_NM not in playlist_desc:
-            playlist_desc += playlist_SPOTIFY_NM
-            count += 1
-            if count < playlist_number:
-                playlist_desc += ", "
-            continue
-        if event['GETALTERNATIVE_NM'] and playlist_GETALTERNATIVE_NM not in playlist_desc:
-            playlist_desc += playlist_GETALTERNATIVE_NM
-            count += 1
-            if count < playlist_number:
-                playlist_desc += ", "
-            continue
-        if event['NPRMUSIC_NM'] and playlist_NPRMUSIC_NM not in playlist_desc:
-            playlist_desc += playlist_NPRMUSIC_NM
-            count += 1
-            if count < playlist_number:
-                playlist_desc += ", "
-            continue
-        if event['SPOTIFY_RR']:
-            playlist_desc += playlist_SPOTIFY_RR
-            count += 1
-            break
-    print(playlist_desc)
+        if 'SPOTIFY_NM' in event:
+            if event['SPOTIFY_NM'] and playlist_SPOTIFY_NM not in playlist_desc:
+                playlist_desc += playlist_SPOTIFY_NM
+                count += 1
+                if count < playlist_number:
+                    playlist_desc += ", "
+                continue
+        if 'GETALTERNATIVE_NM' in event:
+            if event['GETALTERNATIVE_NM'] and playlist_GETALTERNATIVE_NM not in playlist_desc:
+                playlist_desc += playlist_GETALTERNATIVE_NM
+                count += 1
+                if count < playlist_number:
+                    playlist_desc += ", "
+                continue
+        if 'NPRMUSIC_NM' in event:
+            if event['NPRMUSIC_NM'] and playlist_NPRMUSIC_NM not in playlist_desc:
+                playlist_desc += playlist_NPRMUSIC_NM
+                count += 1
+                if count < playlist_number:
+                    playlist_desc += ", "
+                continue
+        if 'SPOTIFY_RR' in event:
+            if event['SPOTIFY_RR']:
+                playlist_desc += playlist_SPOTIFY_RR
+                count += 1
+                break
     sp.user_playlist_change_details(user_id, playlist_id, description=playlist_desc)
     
 def decide_what_playlists_to_pull_from(sp, event):
-    if event['SPOTIFY_NM']:
-        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:37i9dQZF1DX4JAvHpjipBk')
-    if event['GETALTERNATIVE_NM']:
-        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:6y4wz0Gmh2nMlBMjxduLCi')
-    if event['NPRMUSIC_NM']:
-        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:5X8lN5fZSrLnXzFtDEUwb9')
-    if event['SPOTIFY_RR']:
-        get_release_radar(sp)
+    if 'SPOTIFY_NM' in event:
+        if event['SPOTIFY_NM']:
+            NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:37i9dQZF1DX4JAvHpjipBk')
+    if 'GETALTERNATIVE_NM' in event:
+        if event['GETALTERNATIVE_NM']:
+            NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:6y4wz0Gmh2nMlBMjxduLCi')
+    if 'NPRMUSIC_NM' in event:
+        if event['NPRMUSIC_NM']:
+            NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:5X8lN5fZSrLnXzFtDEUwb9')
+    if 'SPOTIFY_RR' in event:
+        if event['SPOTIFY_RR']:
+            get_release_radar(sp)
     
 def main(event, context):
     token = spotipy_token(event)
@@ -162,13 +169,7 @@ def main(event, context):
 
     playlist_id = get_new_music_playlist_id(sp, new_playlist_name, user_id) 
     
-    if len(event) > 1:
-        decide_what_playlists_to_pull_from(sp, event)
-    else:
-        response = {
-                    "Status": "Please check at least one playlist from which to build your new music playlist"
-                }
-        return response
+    decide_what_playlists_to_pull_from(sp, event)
     
     add_new_music_playlist_details(sp, user_id, playlist_id, event) # add new music playlist description
 
