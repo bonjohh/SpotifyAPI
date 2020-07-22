@@ -4,6 +4,7 @@ import json
 import calendar
 import datetime
 from dotenv import load_dotenv
+import pytz
 
 
 def spotipy_token(scope, username):

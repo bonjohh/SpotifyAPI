@@ -194,5 +194,3 @@ def main(event, context):
                     "Status": create_status
                 }
     return response
-    
-    #handle exceptions like the SpotifyException when token has expired
