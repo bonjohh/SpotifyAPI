@@ -59,8 +59,9 @@ def create_new_songs_playlist(sp, user_id, new_playlist_name):
     return_string = sp.user_playlist_create(user_id, new_playlist_name, public=True)    
     return return_string['uri']
 
-NEW_MUSIC_PLAYLISTS_LIST = ['spotify:playlist:37i9dQZF1DX4JAvHpjipBk', 'spotify:playlist:6y4wz0Gmh2nMlBMjxduLCi', 
-                            'spotify:playlist:5X8lN5fZSrLnXzFtDEUwb9']
+NEW_MUSIC_PLAYLISTS_LIST = []
+    # 'spotify:playlist:37i9dQZF1DX4JAvHpjipBk', 'spotify:playlist:6y4wz0Gmh2nMlBMjxduLCi', 
+                            # 'spotify:playlist:5X8lN5fZSrLnXzFtDEUwb9']
 
 def get_release_radar(sp):
     searches = sp.search(q='Release Radar', limit=1, offset=0, type="playlist", market=None)
@@ -103,32 +104,73 @@ def remove_already_on_tracks(total_tracks_set, already_on_tracks_list):
             total_tracks_set.remove(track_uri_a)
     return total_tracks_set
 
-def add_new_music_playlist_details(sp, user_id, playlist_uri):
+def add_new_music_playlist_details(sp, user_id, playlist_uri, event):
     playlist_id = playlist_uri[17:]
-    playlist_desc1 = '''This is a new music playlist created from code by John Wilson (bonjohh on spotify). '''
-    playlist_desc2 = '''It was created by taking the featured album or EP tracks (excluding singles tracks) '''
-    playlist_desc3 = '''from these 4 playlists: New Music Friday by Spotify, The Alternative New Music Friday by getalternative, '''
-    playlist_desc4 = '''NPR Music's New Music Friday by NPR Music, Release Radar by Spotify'''
-    playlist_desc = playlist_desc1 + playlist_desc2 + playlist_desc3 + playlist_desc4
+    playlist_number = len(NEW_MUSIC_PLAYLISTS_LIST)
+    playlist_desc1 = "This is a new music playlist created from code by John Wilson (bonjohh on spotify). It was created "
+    playlist_desc2 = "by taking the featured album or EP tracks (excluding singles tracks) from these " + str(playlist_number) + " playlists: "
+    playlist_SPOTIFY_NM = "New Music Friday by Spotify"
+    playlist_GETALTERNATIVE_NM = "The Alternative New Music Friday by getalternative"
+    playlist_NPRMUSIC_NM = "NPR Music's New Music Friday by NPR Music"
+    playlist_SPOTIFY_RR = "Release Radar by Spotify"
+    playlist_desc = playlist_desc1 + playlist_desc2
+    count = 0
+    while count < playlist_number:
+        if event['SPOTIFY_NM'] and playlist_SPOTIFY_NM not in playlist_desc:
+            playlist_desc += playlist_SPOTIFY_NM
+            count += 1
+            if count < playlist_number:
+                playlist_desc += ", "
+            continue
+        if event['GETALTERNATIVE_NM'] and playlist_GETALTERNATIVE_NM not in playlist_desc:
+            playlist_desc += playlist_GETALTERNATIVE_NM
+            count += 1
+            if count < playlist_number:
+                playlist_desc += ", "
+            continue
+        if event['NPRMUSIC_NM'] and playlist_NPRMUSIC_NM not in playlist_desc:
+            playlist_desc += playlist_NPRMUSIC_NM
+            count += 1
+            if count < playlist_number:
+                playlist_desc += ", "
+            continue
+        if event['SPOTIFY_RR']:
+            playlist_desc += playlist_SPOTIFY_RR
+            count += 1
+            break
     print(playlist_desc)
     sp.user_playlist_change_details(user_id, playlist_id, description=playlist_desc)
-
+    
+def decide_what_playlists_to_pull_from(sp, event):
+    if event['SPOTIFY_NM']:
+        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:37i9dQZF1DX4JAvHpjipBk')
+    if event['GETALTERNATIVE_NM']:
+        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:6y4wz0Gmh2nMlBMjxduLCi')
+    if event['NPRMUSIC_NM']:
+        NEW_MUSIC_PLAYLISTS_LIST.append('spotify:playlist:5X8lN5fZSrLnXzFtDEUwb9')
+    if event['SPOTIFY_RR']:
+        get_release_radar(sp)
+    
 def main(event, context):
     token = spotipy_token(event)
 
     sp = spotipy.Spotify(auth=token)
     
     user_id = try_sp(sp)
-    if event['user_id'] != '':
-        user_id = event['user_id']
     
     new_playlist_name = playlist_name()
 
     playlist_id = get_new_music_playlist_id(sp, new_playlist_name, user_id) 
     
-    get_release_radar(sp)
+    if len(event) > 1:
+        decide_what_playlists_to_pull_from(sp, event)
+    else:
+        response = {
+                    "Status": "Please check at least one playlist from which to build your new music playlist"
+                }
+        return response
     
-    add_new_music_playlist_details(sp, user_id, playlist_id) # add new music playlist description
+    add_new_music_playlist_details(sp, user_id, playlist_id, event) # add new music playlist description
 
     total_tracks_list = []
 
