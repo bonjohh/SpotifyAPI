@@ -35,8 +35,7 @@ def show_tracks(results, sp, playlist_name, total_tracks_list, playlist_id):
         album = sp.album(show_tracks_album_uri(track))
         if album['album_type'] == "album" or str.upper(album['name']).find(' EP') > 0:
             tracks_list.append(track['uri']) # to add only featured tracks to the playlist
-    for track_uri in tracks_list:
-        total_tracks_list.append(track_uri)
+    total_tracks_list.extend(tracks_list)
     return total_tracks_list 
 
 def show_tracks_album_uri(track):
