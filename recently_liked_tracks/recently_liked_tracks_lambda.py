@@ -115,7 +115,7 @@ def main(event, context):
     split_range = int(len(already_on_tracks_list) / 100) + 1
     for i in range(0, split_range):
         split = split_set(already_on_tracks_list, i)
-        removed_tracks = sp.user_playlist_remove_all_occurrences_of_tracks(user_id, playlist_id, split)
+        sp.user_playlist_remove_all_occurrences_of_tracks(user_id, playlist_id, split)
 
     results = sp.current_user_saved_tracks()
     total_tracks_list = show_tracks(results, sp, new_playlist_name, total_tracks_list, playlist_id)

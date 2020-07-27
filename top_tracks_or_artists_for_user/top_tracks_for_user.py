@@ -9,7 +9,7 @@ def spotipy_token(scope, username):
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
 
-def top_tracks_for_user(username, event=None, context=None):
+def top_tracks_for_user(username):
     scope = 'user-top-read'
     token = spotipy_token(scope, username)
     sp = spotipy.Spotify(auth=token)
