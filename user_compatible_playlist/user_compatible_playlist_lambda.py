@@ -27,10 +27,6 @@ def spotipy_token(event):
     token = event['SPOTIFY_TOKEN']
     return token
 
-def create_playlist(sp, user_id, new_playlist_name):
-    return_string = sp.user_playlist_create(user_id, new_playlist_name, public=True)    
-    return return_string['uri']
-
 def split_set(total_tracks_set, i, x):
     tracks_list = list(total_tracks_set)
     if i == 0:

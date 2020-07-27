@@ -74,6 +74,10 @@ def add_playlist_desc(sp, my_user_id, this_user, other_user, playlist_id):
     playlist_desc = playlist_desc1 + playlist_desc2 + playlist_desc3
     sp.user_playlist_change_details(my_user_id, playlist_id, description=playlist_desc)
 
+def create_playlist(sp, user_id, new_playlist_name):
+    return_string = sp.user_playlist_create(user_id, new_playlist_name, public=True)    
+    return return_string['uri']
+
 def main(event, context):
     global my_user_id
     global token
