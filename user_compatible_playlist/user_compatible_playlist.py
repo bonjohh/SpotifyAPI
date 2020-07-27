@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import json
 import random
+import time
 
 def spotipy_token(scope, username):
     project_folder = os.path.expanduser('D:/Documents/Python_Course/SpotifyAPI')
@@ -10,19 +11,11 @@ def spotipy_token(scope, username):
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
 
-def get_artist_id(sp, name):
-    results = sp.search(q='artist:' + name, type='artist')
-    items = results['artists']['items']
-    if len(items) > 0:
-        return items[0]['id']
-    else:
-        return None
-
 def create_playlist(sp, user_id, new_playlist_name):
     return_string = sp.user_playlist_create(user_id, new_playlist_name, public=True)    
     return return_string['uri']
 
-def get_recently_liked_playlist_id(sp, new_playlist_name, user_id):
+def get_compatible_playlist_id(sp, new_playlist_name, user_id):
     playlists = sp.current_user_playlists(limit=10) # must keep the new music playlist at the top if you're going to run it again
     playlist_id = ''
     for playlist in playlists['items']:
@@ -71,6 +64,7 @@ def popularity_sort(track):
     return results['popularity']
 
 def main(my_user_id_temp, other_user_id):
+    start_time = time.time()
     global my_user_id
     global token
     my_user_id = my_user_id_temp
@@ -79,14 +73,15 @@ def main(my_user_id_temp, other_user_id):
     token = token_temp
     sp = spotipy.Spotify(auth=token)
 
-    playlists = sp.user_playlists(other_user_id) # , fields="")
+    playlists = sp.user_playlists(other_user_id)
 
     artist_list = []
+    artist_id_list = []
 
     while playlists:
         for playlist in playlists['items']:
             pl_id = playlist['id']
-            playlist_tracks = sp.playlist(pl_id) #, fields='items.track.id,total')
+            playlist_tracks = sp.playlist(pl_id, fields='tracks.items.track.artists.name,tracks.items.track.artists.id')
             for track in playlist_tracks['tracks']['items']:
                 if track['track'] == None:
                     continue
@@ -94,17 +89,22 @@ def main(my_user_id_temp, other_user_id):
                 artist_num = len(track['track']['artists'])
                 if artist_num > 1:
                     artists = track['track']['artists'][0]['name']
+                    artists_id = track['track']['artists'][0]['id']
                     for j in range(1, artist_num):
                         artists = artists + " " + track['track']['artists'][j]['name']
+                        artists_id = artists_id + " " + track['track']['artists'][j]['id']
                 else:
                     artists = track['track']['artists'][0]['name']
+                    artist_id = track['track']['artists'][0]['id']
                 if artists in artist_list:
-                    for i in range(0, len(artist_list)):
-                        if artist_list[i] == artists:
-                            artist_list[i+1] += 1
+                    artists_index = artist_list.index(artists)
+                    artist_list[artists_index + 1] += 1
+                    artist_id_list[artists_index + 1] += 1
                 else:
                     artist_list.append(artists)
                     artist_list.append(1)
+                    artist_id_list.append(artist_id)
+                    artist_id_list.append(1)
         if playlists['next']:
             playlists = sp.next(playlists)
         else:
@@ -133,12 +133,14 @@ def main(my_user_id_temp, other_user_id):
         if artist_list[k] in top_artist_list and artist_list[k + 1] > 2:
             compatible_artists_list.append(artist_list[k])
             compatible_artists_list.append(artist_list[k + 1])
+            compatible_artists_id_list.append(artist_id_list[k])
+            compatible_artists_id_list.append(artist_id_list[k + 1])
 
     similar_artists = []
     similar_artists_names = []
 
     for l in range(0, len(compatible_artists_list) - 1, 2):
-        artist_id = get_artist_id(sp, compatible_artists_list[l])
+        artist_id = compatible_artists_id_list[l]
         results = sp.artist_related_artists(artist_id)
         compatible_artists_id_list.append(artist_id)
         a = 0
@@ -147,17 +149,18 @@ def main(my_user_id_temp, other_user_id):
                 similar_artists.append(artist['id'])
                 similar_artists_names.append(artist['name'])
                 a += 1
-
-    for m in range(0, len(compatible_artists_list) - 1, 2):
-        artist_id = get_artist_id(sp, compatible_artists_list[m])
-        for artist in results['artists']:
-            similar_artists.append(artist_id)
-            similar_artists_names.append(compatible_artists_list[m])
+            elif a > 3:
+                break
+        similar_artists.append(artist_id)
+        similar_artists_names.append(compatible_artists_list[l])
 
     similar_artists = set(similar_artists)
     similar_artists_names = set(similar_artists_names)
     similar_artists_names = list(similar_artists_names)
     random.shuffle(similar_artists_names)
+
+    end_time = time.time() - start_time
+    print(end_time)
 
     similar_artists_tracks = []
 
@@ -171,11 +174,15 @@ def main(my_user_id_temp, other_user_id):
                 similar_artists_tracks.append(results['tracks'][n]['id'])
 
     similar_artists_tracks.sort(reverse=True, key=popularity_sort)
-
-    for track in similar_artists_tracks:
-        popularity = popularity_sort(track)
-        if popularity < 40:
-            similar_artists_tracks.remove(track)
+    
+    m = -1
+    while True:
+        popularity = popularity_sort(similar_artists_tracks[m])
+        if popularity < 30:
+            similar_artists_tracks.remove(similar_artists_tracks[m])
+            m -= 1
+        else:
+            break
 
     other_user = sp.user(other_user_id)
     other_user = other_user['display_name']
@@ -184,7 +191,7 @@ def main(my_user_id_temp, other_user_id):
 
     playlist_name = "Compatibility Playlist: " + this_user + " + " + other_user
 
-    playlist_id = get_recently_liked_playlist_id(sp, playlist_name, my_user_id)
+    playlist_id = get_compatible_playlist_id(sp, playlist_name, my_user_id)
 
     already_on_tracks_list = add_tracks_already_on_playlist(sp, playlist_id)
     
@@ -212,5 +219,5 @@ def main(my_user_id_temp, other_user_id):
 
 if __name__ == "__main__":
     # print(main("jwilso29", "1251692081"))
-    print(main("jwilso29", "calamityclaire14"))
-    # print(main("jwilso29", "1210157395"))
+    # print(main("jwilso29", "calamityclaire14"))
+    print(main("jwilso29", "1210157395"))
