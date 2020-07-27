@@ -1,38 +1,35 @@
 import spotipy
-from dotenv import load_dotenv
-import os
 import json
 import random
-import time
+import boto3
+import botocore
 
-def spotipy_token(scope, username):
-    project_folder = os.path.expanduser('D:/Documents/Python_Course/SpotifyAPI')
-    load_dotenv(os.path.join(project_folder, '.env'))
-    token = spotipy.util.prompt_for_user_token(username, scope)
+class LambdaException(Exception):
+    pass
+
+def try_sp(sp):
+    try:
+        user_id = sp.me()
+        return user_id['id']
+    except Exception as e:
+        exception_type = e.__class__.__name__
+        exception_message = str(e)
+        how_to_fix = 'please get a fresh new spotify authorization token' 
+        exception_str = {
+            "isError": True,
+            "type": exception_type,
+            "HOW TO FIX": str.upper(how_to_fix),
+            "message": exception_message
+        }
+        raise LambdaException(exception_str)
+
+def spotipy_token(event):
+    token = event['SPOTIFY_TOKEN']
     return token
 
 def create_playlist(sp, user_id, new_playlist_name):
     return_string = sp.user_playlist_create(user_id, new_playlist_name, public=True)    
     return return_string['uri']
-
-def get_compatible_playlist_id(sp, new_playlist_name, user_id):
-    playlists = sp.current_user_playlists(limit=10) # must keep the new music playlist at the top if you're going to run it again
-    playlist_id = ''
-    for playlist in playlists['items']:
-        if playlist['name'] == new_playlist_name:
-            playlist_id = playlist['uri']
-            break
-    if playlist_id == '':
-        playlist_id = create_playlist(sp, user_id, new_playlist_name)
-    return playlist_id
-
-def add_playlist_desc(sp, my_user_id, this_user, other_user, playlist_id):
-    playlist_id = playlist_id[17:]
-    playlist_desc1 = "This is a playlist created from code by John Wilson (bonjohh on spotify). It was created "
-    playlist_desc2 = "based on top songs of artists, where the artists are similar to those that both users have "
-    playlist_desc3 = "similar interest in. Users are " + this_user + " and " + other_user + "."
-    playlist_desc = playlist_desc1 + playlist_desc2 + playlist_desc3
-    sp.user_playlist_change_details(my_user_id, playlist_id, description=playlist_desc)
 
 def split_set(total_tracks_set, i, x):
     tracks_list = list(total_tracks_set)
@@ -44,42 +41,30 @@ def split_set(total_tracks_set, i, x):
         split = tracks_list[x*i:len(tracks_list)]
     return split
 
-def add_tracks_already_on_playlist(sp, playlist_id):
-    already_on_list = []
-    response = sp.playlist_tracks(playlist_id, fields='items.track.uri,total,next')
-    if response['total'] > 0:
-        for track in response['items']:
-            already_on_list.append(track['track']['uri'])
-        while response['next']:
-            response = sp.next(response)
-            for track in response['items']:
-                already_on_list.append(track['track']['uri'])
-    else:
-        return already_on_list
-    return already_on_list
+def invoke_function(event):
+    client = boto3.client('lambda')
+    function_name = 'compatibility_playlist_child'
+    function_invoke_response = client.invoke(FunctionName=function_name, 
+                                            InvocationType='Event', 
+                                            Payload=json.dumps(event))
 
-def popularity_sort(track):
-    sp = spotipy.Spotify(auth=token)
-    results = sp.track(track)
-    return results['popularity']
-
-def main(my_user_id_temp, other_user_id):
-    start_time = time.time()
+def main(event, context):
     global my_user_id
     global token
-    my_user_id = my_user_id_temp
-    scope = 'playlist-read-private playlist-modify-public user-top-read'
-    token_temp = spotipy_token(scope, my_user_id)
-    token = token_temp
+    token = spotipy_token(event)
+
     sp = spotipy.Spotify(auth=token)
+    
+    my_user_id = try_sp(sp)
+    other_user_id = event['other_user_id']
 
     continue_bool = False
     while continue_bool != True:
         playlists = sp.user_playlists(other_user_id)
-
+    
         artist_list = []
         artist_id_list = []
-
+    
         while playlists:
             for playlist in playlists['items']:
                 pl_id = playlist['id']
@@ -113,9 +98,9 @@ def main(my_user_id_temp, other_user_id):
                 playlists = None
         
         ranges = ['short_term', 'medium_term', 'long_term']
-
+    
         top_artist_list = []
-
+    
         for sp_range in ranges:
             results = sp.current_user_top_artists(time_range=sp_range, limit=50)
             for item in results['items']:
@@ -130,22 +115,22 @@ def main(my_user_id_temp, other_user_id):
             
         compatible_artists_list = []
         compatible_artists_id_list = []
-
+    
         for k in range(0, len(artist_list) - 1, 2):
             if artist_list[k] in top_artist_list and artist_list[k + 1] > 2:
                 compatible_artists_list.append(artist_list[k])
                 compatible_artists_list.append(artist_list[k + 1])
                 compatible_artists_id_list.append(artist_id_list[k])
                 compatible_artists_id_list.append(artist_id_list[k + 1])
-
+    
         if len(compatible_artists_list) == 0:
             break
         else:
             continue_bool = True
-
+    
         similar_artists = []
         similar_artists_names = []
-
+    
         for l in range(0, len(compatible_artists_list) - 1, 2):
             artist_id = compatible_artists_id_list[l]
             results = sp.artist_related_artists(artist_id)
@@ -160,76 +145,50 @@ def main(my_user_id_temp, other_user_id):
                     break
             similar_artists.append(artist_id)
             similar_artists_names.append(compatible_artists_list[l])
-
+    
         similar_artists = set(similar_artists)
+        similar_artists = list(similar_artists)
         similar_artists_names = set(similar_artists_names)
         similar_artists_names = list(similar_artists_names)
         random.shuffle(similar_artists_names)
-
-        end_time = time.time() - start_time
-        print(end_time)
-
-        similar_artists_tracks = []
-
-        for id in similar_artists:
-            results = sp.artist_top_tracks(id)
-            if id in compatible_artists_id_list:
-                for n in range(0, 9):
-                    similar_artists_tracks.append(results['tracks'][n]['id'])
-            else:
-                for n in range(0, 4):
-                    similar_artists_tracks.append(results['tracks'][n]['id'])
-
-        similar_artists_tracks.sort(reverse=True, key=popularity_sort)
         
-        m = -1
-        while True:
-            popularity = popularity_sort(similar_artists_tracks[m])
-            if popularity < 30:
-                similar_artists_tracks.remove(similar_artists_tracks[m])
-                m -= 1
-            else:
-                break
-
-        other_user = sp.user(other_user_id)
-        other_user = other_user['display_name']
-        this_user = sp.user(my_user_id)
-        this_user = this_user['display_name']
-
-        playlist_name = "Compatibility Playlist: " + this_user + " + " + other_user
-
-        playlist_id = get_compatible_playlist_id(sp, playlist_name, my_user_id)
-
-        already_on_tracks_list = add_tracks_already_on_playlist(sp, playlist_id)
+        json_str = {
+            "similar_artists": similar_artists,
+            "similar_artists_names": similar_artists_names,
+            "compatible_artists_list": compatible_artists_list,
+            "compatible_artists_id_list": compatible_artists_id_list
+            }
+        json_str = json.dumps(json_str)
         
-        split_range = int(len(already_on_tracks_list) / 100) + 1
-        for i in range(0, split_range):
-            split = split_set(already_on_tracks_list, i, 100)
-            sp.user_playlist_remove_all_occurrences_of_tracks(my_user_id, playlist_id, split)
-
-        add_playlist_desc(sp, my_user_id, this_user, other_user, playlist_id)
-
-        similar_artists_tracks_length = len(similar_artists_tracks)
-        if similar_artists_tracks_length > 0:
-            split_range = int(similar_artists_tracks_length / 100) + 1
-            for i in range(0, split_range):
-                split = split_set(similar_artists_tracks, i, 100)
-                sp.user_playlist_add_tracks(my_user_id, playlist_id, split)
-
-        create_status = str(similar_artists_tracks_length) + " songs added to playlist: [" + playlist_name + "]"
+        client = boto3.client('s3')
+        resource = boto3.resource('s3')
         
+        file_name = "similar-artists-" + my_user_id + "-" + other_user_id + ".json"
+        bucket_name = "bonjohh-compatibility-playlist"
+    
+        try:
+            resource.Object(bucket_name, file_name).load()
+            print("file already exists!!!!!!!!!!!!!!!!!!!!!")
+            json_str = str(json_str).encode("utf-8")
+            s3_path = file_name
+            client.put_object(Body=json_str, Bucket=bucket_name, Key=s3_path)
+            print("file overwritten!!!!!!!!!!!")
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                json_str = str(json_str).encode("utf-8")
+                s3_path = file_name
+                client.put_object(Body=json_str, Bucket=bucket_name, Key=s3_path)
+                print("file created!!!!!!!!!!!!!!!!!!!!")
+                
+        invoke_function(event)
+        
+        create_status = "Playlist has been successfully created and songs have been added."
         response = {
             "Status": create_status,
             "Compatible Artists": similar_artists_names
         }
         return response
-    
+        
     if continue_bool == False:
         response = "You and the user input have no compatible artists in common."
         return response
-
-if __name__ == "__main__":
-    pass
-    # print(main("jwilso29", "1251692081"))
-    # print(main("jwilso29", "calamityclaire14"))
-    # print(main("jwilso29", "1210157395"))
