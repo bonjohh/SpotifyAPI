@@ -25,7 +25,7 @@ def spotipy_token(event):
     token = event['SPOTIFY_TOKEN']
     return token
 
-def show_tracks(results, sp, playlist_name, total_tracks_list, playlist_id):
+def show_tracks(results, total_tracks_list):
     for item in results['items']:
         track = item['track']
         total_tracks_list.append(track['uri'])
@@ -118,12 +118,12 @@ def main(event, context):
         sp.user_playlist_remove_all_occurrences_of_tracks(user_id, playlist_id, split)
 
     results = sp.current_user_saved_tracks()
-    total_tracks_list = show_tracks(results, sp, new_playlist_name, total_tracks_list, playlist_id)
+    total_tracks_list = show_tracks(results, total_tracks_list)
     
     stop_after_next = False
     while True:
         results = sp.next(results)
-        total_tracks_list = show_tracks(results, sp, new_playlist_name, total_tracks_list, playlist_id)
+        total_tracks_list = show_tracks(results, total_tracks_list)
         last_added_date = get_last_date_added(results)
         if last_added_date < playlist_date:
             if stop_after_next:

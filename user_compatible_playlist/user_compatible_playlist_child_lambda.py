@@ -42,7 +42,7 @@ def split_set(total_tracks_set, i, x):
     return split
     
 def get_compatible_playlist_id(sp, new_playlist_name, user_id):
-    playlists = sp.current_user_playlists(limit=10) # must keep the new music playlist at the top if you're going to run it again
+    playlists = sp.current_user_playlists(limit=20) # must keep the new music playlist at the top if you're going to run it again
     playlist_id = ''
     for playlist in playlists['items']:
         if playlist['name'] == new_playlist_name:
