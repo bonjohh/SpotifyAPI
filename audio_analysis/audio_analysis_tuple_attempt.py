@@ -11,20 +11,59 @@ def spotipy_token(scope, username):
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
 
-def populate_total_track_list(results, total_tracks_list):
+def populate_audio_features(sp, total_tracks_tuple):
+    temp_tracks_list = []
+    num_type = len(total_tracks_tuple) / 100
+    if isinstance(num_type, int):
+        split_range = int(len(total_tracks_tuple) / 100)
+    else:
+        split_range = int(len(total_tracks_tuple) / 100) + 1
+    for i in range(0, split_range):
+        uri_list = []
+        split = split_set(total_tracks_tuple, i, 100)
+        for split_tuple in split:
+            uri = split_tuple[0]
+            uri_list.append(uri)
+        track_audio_features = sp.audio_features(uri_list)
+        for l in range(0, len(track_audio_features)):
+            acousticness = track_audio_features[l]['acousticness']
+            energy = track_audio_features[l]['energy']
+            valence = track_audio_features[l]['valence']
+            loudness = track_audio_features[l]['loudness']
+            tempo = track_audio_features[l]['tempo']
+            danceability = track_audio_features[l]['danceability']
+            liveness = track_audio_features[l]['liveness']
+            instrumentalness = track_audio_features[l]['instrumentalness']
+            temp_list = [acousticness, energy, valence, loudness, tempo, \
+                danceability, liveness, instrumentalness]
+            temp_list = list(split[l]) + temp_list
+            temp_tracks_list.append(temp_list)
+        temp_total_tracks_tuple = ('first value', )
+        for track in temp_tracks_list:
+            temp_total_tracks_tuple = temp_total_tracks_tuple + (tuple(track), )
+    temp_total_tracks_tuple = tuple(x for x in temp_total_tracks_tuple if 'first value' not in x)
+    return temp_total_tracks_tuple
+
+def populate_total_tracks(sp, results, total_tracks_tuple):
     for item in results['items']:
         track = item['track']
-        total_tracks_list.append(track['uri'])
-    return total_tracks_list 
+        uri = track['uri']
+        track_name = track['name']
+        album_name = track['album']['name']
+        artist_name = track['artists'][0]['name']
+        track_id = track['id']
+        popularity = track['popularity']
+        temp_track_tuple = ((uri, track_name, album_name, artist_name, track_id, popularity), )
+        total_tracks_tuple = total_tracks_tuple + (temp_track_tuple)
+    return total_tracks_tuple
 
-def split_set(total_tracks_set, i, x):
-    tracks_list = list(total_tracks_set)
+def split_set(total_tracks_tuple, i, x):
     if i == 0:
-        split = tracks_list[:x]
-    elif len(tracks_list) > x:
-        split = tracks_list[x*i:x+x*i]
+        split = total_tracks_tuple[:x]
+    elif len(total_tracks_tuple) > x:
+        split = total_tracks_tuple[x*i:x+x*i]
     else:
-        split = tracks_list[x*i:len(tracks_list)]
+        split = total_tracks_tuple[x*i:len(total_tracks_tuple)]
     return split
 
 def create_playlist(sp, user_id, new_playlist_name):
@@ -63,83 +102,69 @@ def add_tracks_already_on_playlist(sp, playlist_id):
         return already_on_list
     return already_on_list
 
-def print_track_details(sp, track, score):
-    track_details = sp.track(track)
-    print(track_details['name'] + " ----- " + track_details['album']['name'] + " ------ " \
-        + track_details['artists'][0]['name'] + " ------ " + str(score))
+def print_track_details(track, score):
+    print(track[1] + " ----- " + track[2] + " ------ " + track[3] + " ------ " + str(score))
 
 def morning_sort(track):
-    sp = spotipy.Spotify(auth=token)
-    results = sp.track(track)
-    popularity = results['popularity']
-    audio_features_result = sp.audio_features(track)     
-    acousticness = audio_features_result[0]['acousticness']
-    energy = audio_features_result[0]['energy']
-    loudness = audio_features_result[0]['loudness']
-    tempo = audio_features_result[0]['tempo']
+    popularity = track[5]
+    acousticness = track[6]
+    energy = track[7]
+    loudness = track[9]
+    tempo = track[10]
     morning_score = 3 * (popularity / 100) \
         + 2 * acousticness \
         + 1.5 * energy \
         + 2 * (abs(loudness) / 100) \
         + 1.5 * (tempo / 100)
-    # print_track_details(sp, track, morning_score)
+    # print_track_details(track, morning_score)
     return morning_score
     
 def exercise_sort(track):
-    sp = spotipy.Spotify(auth=token)
-    results = sp.track(track)
-    popularity = results['popularity']
-    audio_features_result = sp.audio_features(track)     
-    acousticness = audio_features_result[0]['acousticness']
-    energy = audio_features_result[0]['energy']
-    loudness = audio_features_result[0]['loudness']
-    tempo = audio_features_result[0]['tempo']
-    danceability = audio_features_result[0]['danceability']
+    popularity = track[5]
+    acousticness = track[6]
+    energy = track[7]
+    loudness = track[9]
+    tempo = track[10]
+    danceability = track[11]
     exercise_score = 2.5 * (popularity / 100) \
         + 1.5 * (-1 * acousticness) \
         + 2 * energy \
         + 1.5 * (loudness / 100) \
         + 1.5 * (tempo / 100) \
         + 1 * danceability
-    # print_track_details(sp, track, exercise_score)
+    # print_track_details(track, exercise_score)
     return exercise_score
 
 def pregame_sort(track):
-    sp = spotipy.Spotify(auth=token)
-    results = sp.track(track)
-    popularity = results['popularity']
-    audio_features_result = sp.audio_features(track)     
-    valence = audio_features_result[0]['valence']
-    energy = audio_features_result[0]['energy']
-    loudness = audio_features_result[0]['loudness']
-    tempo = audio_features_result[0]['tempo']
-    danceability = audio_features_result[0]['danceability']
+    popularity = track[5]
+    valence = track[8]
+    energy = track[7]
+    loudness = track[9]
+    tempo = track[10]
+    danceability = track[11]
     pregame_score = 2.5 * (popularity / 100) \
         + 1 * energy \
         + 2 * valence \
         + 1.5 * (loudness / 100) \
         + 1 * (tempo / 100) \
         + 2 * danceability
-    # print_track_details(sp, track, pregame_score)
+    # print_track_details(track, pregame_score)
     return pregame_score
 
 def live_sort(track):
-    sp = spotipy.Spotify(auth=token)
-    results = sp.track(track)
-    popularity = results['popularity']
-    audio_features_result = sp.audio_features(track)  
-    liveness = audio_features_result[0]['liveness']
-    energy = audio_features_result[0]['energy']
-    loudness = audio_features_result[0]['loudness']
-    danceability = audio_features_result[0]['danceability']
-    instrumentalness = audio_features_result[0]['instrumentalness']
+    popularity = track[5]
+    liveness = track[12]
+    instrumentalness = track[13]
+    energy = track[7]    
+    loudness = track[9]
+    danceability = track[11]
     live_score = 1.5 * (popularity / 100) \
         + 3.5 * liveness \
         + 1 * energy \
         + 1 * (loudness / 100) \
         + 1.5 * danceability \
         + 1.5 * instrumentalness
-    # print_track_details(sp, track, live_score)
+    # print_track_details(track, live_score)
     return live_score
     
 def main(user_id, saved_bool, playlist_bool, setting):
@@ -149,14 +174,14 @@ def main(user_id, saved_bool, playlist_bool, setting):
     token = spotipy_token(scope, user_id)    
     sp = spotipy.Spotify(auth=token)
 
-    total_tracks_list = []
+    total_tracks_tuple = ('first value', )
 
     if saved_bool == True:
         saved_tracks_results = sp.current_user_saved_tracks(limit=50)
-        total_tracks_list = populate_total_track_list(saved_tracks_results, total_tracks_list)
+        total_tracks_tuple = populate_total_tracks(sp, saved_tracks_results, total_tracks_tuple)
         while saved_tracks_results['next']:
             saved_tracks_results = sp.next(saved_tracks_results)
-            total_tracks_list = populate_total_track_list(saved_tracks_results, total_tracks_list)
+            total_tracks_tuple = populate_total_tracks(sp, saved_tracks_results, total_tracks_tuple)
 
     if playlist_bool == True:
         playlists = sp.user_playlists(user_id)
@@ -164,55 +189,62 @@ def main(user_id, saved_bool, playlist_bool, setting):
             for playlist in playlists['items']:
                 playlist_results = sp.playlist(playlist['id'], fields="tracks,next")
                 tracks = playlist_results['tracks']
-                total_tracks_list = populate_total_track_list(tracks, total_tracks_list)
+                total_tracks_tuple = populate_total_tracks(sp, tracks, total_tracks_tuple)
                 while tracks['next']:
                     tracks = sp.next(tracks)
-                    total_tracks_list = populate_total_track_list(tracks, total_tracks_list)
+                    total_tracks_tuple = populate_total_tracks(sp, tracks, total_tracks_tuple)
             if playlists['next']:
                 playlists = sp.next(playlists)
             else:
                 playlists = None
 
-    total_tracks_list = set(total_tracks_list)
-    total_tracks_list = list(total_tracks_list)
+    total_tracks_tuple = total_tracks_tuple[1:]
+
+    total_tracks_tuple = populate_audio_features(sp, total_tracks_tuple)
+
+    total_tracks_tuple = set(total_tracks_tuple)
+    total_tracks_tuple = tuple(total_tracks_tuple)
 
     setting_tracks_list = []
 
-    total_tracks_list_length = len(total_tracks_list)
-    if total_tracks_list_length > 0:
-        split_range = int(total_tracks_list_length / 100) + 1
-        for i in range(0, split_range):
-            split = split_set(total_tracks_list, i, 100)
-            audio_features_results = sp.audio_features(split)
-            for track in audio_features_results:
-                if setting == "morning":
-                    if track['acousticness'] > 0.6 \
-                        and track['energy'] < 0.3 \
-                        and track['loudness'] < -10 \
-                        and track['tempo'] < 100:
-                        setting_tracks_list.append(track['uri'])
-                elif setting == "exercise":
-                    if track['acousticness'] < 0.2 \
-                        and track['energy'] > 0.8 \
-                        and track['loudness'] > -10 \
-                        and track['tempo'] > 130 \
-                        and track['danceability'] > 0.5:
-                        setting_tracks_list.append(track['uri'])
-                elif setting == "pregame":
-                    if track['energy'] > 0.4 \
-                        and track['loudness'] > -10 \
-                        and track['tempo'] > 110 \
-                        and track['valence'] > 0.5 \
-                        and track['danceability'] > 0.7:
-                        setting_tracks_list.append(track['uri'])
-                elif setting == "live":
-                    if track['liveness'] > 0.6 \
-                        and track['instrumentalness'] > 0.05:
-                        setting_tracks_list.append(track['uri'])
+    total_tracks_tuple_length = len(total_tracks_tuple)
+    if total_tracks_tuple_length > 0:
+        for track in total_tracks_tuple:
+            acousticness = track[6]
+            energy = track[7]
+            valence = track[8]
+            loudness = track[9]
+            tempo = track[10]
+            danceability = track[11]
+            liveness = track[12]
+            instrumentalness = track[13]
+            if setting == "morning":
+                if acousticness > 0.6 \
+                    and energy < 0.3 \
+                    and loudness < -10 \
+                    and tempo < 100:
+                    setting_tracks_list.append(track)
+            elif setting == "exercise":
+                if acousticness < 0.2 \
+                    and energy > 0.8 \
+                    and loudness > -10 \
+                    and tempo > 130 \
+                    and danceability > 0.5:
+                    setting_tracks_list.append(track)
+            elif setting == "pregame":
+                if energy > 0.4 \
+                    and loudness > -10 \
+                    and tempo > 110 \
+                    and valence > 0.5 \
+                    and danceability > 0.7:
+                    setting_tracks_list.append(track)
+            elif setting == "live":
+                if liveness > 0.6 \
+                    and instrumentalness > 0.05:
+                    setting_tracks_list.append(track)
 
-    # for track_uri in setting_tracks_list:
-    #     track = sp.track(track_uri)
-    #     print(track['name'] + " ----- " + track['album']['name'] + " ----- " + track['artists'][0]['name'])
+    # for track in setting_tracks_list:
+    #     print(track[1] + " ----- " + track[2] + " ----- " + track[3])
     
     if setting == "morning":
         setting_tracks_list.sort(reverse=True, key=morning_sort)
@@ -246,7 +278,10 @@ def main(user_id, saved_bool, playlist_bool, setting):
     else:
         split_range = int(setting_tracks_list_length / 100) + 1
         for i in range(0, split_range):
-            split = split_set(setting_tracks_list, i, 100)
+            uri_list = []
+            for track in setting_tracks_list:
+                uri_list.append(track[0])
+            split = split_set(uri_list, i, 100)
             sp.user_playlist_add_tracks(user_id, playlist_id, split)
     
     print(time() - start)

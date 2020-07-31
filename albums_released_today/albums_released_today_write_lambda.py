@@ -55,7 +55,11 @@ def main(event, context):
         saved_results = sp.next(saved_results)
         album_list = show_saved_tracks(saved_results, album_list)
 
-    json_str = list(album_list for album_list,_ in itertools.groupby(album_list))
+    album_list = [tuple(album) for album in album_list]
+    album_list = set(album_list)
+    album_list = [list(album) for album in album_list]
+
+    json_str = album_list
     json_str = json.dumps(json_str)
 
     client = boto3.client('s3')
