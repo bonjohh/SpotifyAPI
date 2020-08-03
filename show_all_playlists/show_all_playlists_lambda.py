@@ -1,6 +1,5 @@
 import spotipy
 
-
 class LambdaException(Exception):
     pass
 
@@ -32,10 +31,10 @@ def show_all_playlists(event, context):
     i = 1
     while playlists:
         for playlist in playlists['items']:
-            playlist_name =  "%s" % (playlist['name'])
-            playlist_uri = "%s" % (playlist['uri'])
-            playlist_owner = "%s" % (playlist['owner']['id'])
-            total_tracks = "%d" % (playlist['tracks']['total'])
+            playlist_name = playlist['name']
+            playlist_uri = playlist['uri']
+            playlist_owner = playlist['owner']['id']
+            total_tracks = playlist['tracks']['total']
             playlist_output = "%3d %35.35s %45.45s %15.15s %15.15s" % (i, playlist_name, playlist_uri, playlist_owner, total_tracks)
             playlist_list.append(playlist_output)
             i += 1
@@ -44,6 +43,6 @@ def show_all_playlists(event, context):
         else:
             playlists = None
     response = {
-                    "playlist_list": playlist_list
-                }
+        "response": playlist_list
+    }
     return response
