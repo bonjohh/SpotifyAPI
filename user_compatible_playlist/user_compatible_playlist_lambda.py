@@ -142,13 +142,55 @@ def main(event, context):
             similar_artists.append(artist_id)
             similar_artists_names.append(compatible_artists_list[l])
     
-        similar_artists = set(similar_artists)
-        similar_artists = list(similar_artists)
-        similar_artists_names = set(similar_artists_names)
-        similar_artists_names = list(similar_artists_names)
-        random.shuffle(similar_artists_names)
+        similar_of_similar_artists = []
+        similar_of_similar_artists_names = []
+
+        for k in range(0, len(similar_artists)):
+            artist_id = similar_artists[k]
+            results = sp.artist_related_artists(artist_id)
+            a = 0
+            for artist in results['artists']:
+                if artist['popularity'] >= 40 and a < 4:
+                    similar_of_similar_artists.append(artist['id'])
+                    similar_of_similar_artists_names.append(artist['name'])
+                    a += 1
+                elif a > 3:
+                    break
+            similar_of_similar_artists.append(artist_id)
+            similar_of_similar_artists_names.append(similar_artists_names[k])
+
+        similar_of_similar_artists_count = []
+
+        for j in range(0, len(similar_of_similar_artists)):
+            artist_id = similar_of_similar_artists[j]
+            if artist_id not in similar_of_similar_artists_count:
+                similar_of_similar_artists_count.append(artist_id)
+                similar_of_similar_artists_count.append(1)
+                similar_of_similar_artists_count.append(similar_of_similar_artists_names[j])
+            else:
+                artist_id_index = similar_of_similar_artists_count.index(artist_id)
+                similar_of_similar_artists_count[artist_id_index + 1] += 1
+
+        similar_of_similar_artists = []
+        similar_of_similar_artists_names = []
+
+        for m in range(0, len(similar_of_similar_artists_count) - 2, 3):
+            artist_id = similar_of_similar_artists_count[m]
+            artist_name = similar_of_similar_artists_count[m + 2]
+            if similar_of_similar_artists_count[m + 1] >= 2:
+                similar_of_similar_artists.append(artist_id)
+                similar_of_similar_artists_names.append(artist_name)
+                
+        if len(similar_of_similar_artists) == 0:
+            break
+        else:
+            continue_bool = True
+
+        random.shuffle(similar_of_similar_artists_names)
         
         json_str = {
+            "similar_of_similar_artists": similar_of_similar_artists,
+            "similar_of_similar_artists_names": similar_of_similar_artists_names,
             "similar_artists": similar_artists,
             "similar_artists_names": similar_artists_names,
             "compatible_artists_list": compatible_artists_list,
@@ -177,11 +219,13 @@ def main(event, context):
                 print("file created!!!!!!!!!!!!!!!!!!!!")
                 
         invoke_function(event)
-        
+
         create_status = "Playlist has been successfully created and songs have been added."
         response = {
             "Status": create_status,
-            "Compatible Artists": similar_artists_names
+            "Compatible Artists": compatible_artists_list,
+            "Similar Artists": similar_artists_names,
+            "Similar of Similar Artists": similar_of_similar_artists_names
         }
         return response
         

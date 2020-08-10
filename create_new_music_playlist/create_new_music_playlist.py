@@ -17,7 +17,10 @@ def show_tracks(results, sp, playlist_name, total_tracks_list, playlist_id):
     tracks_list = []
     for item in results['items']:
         track = item['track']
-        album = sp.album(show_tracks_album_uri(track))
+        if track == None:
+            continue
+        else:
+            album = sp.album(show_tracks_album_uri(track))
         if album['album_type'] == "album" or str.upper(album['name']).find(' EP') > 0:
             tracks_list.append(track['uri'])
     for track_uri in tracks_list:
@@ -130,3 +133,7 @@ def main(user_id):
     if len(total_tracks_set) > 0: # if there are any songs to add
         sp.user_playlist_add_tracks(user_id, playlist_id, total_tracks_set) # add the tracks from the total tracks
                                                                                  # list to the new music playlist
+
+if __name__ == "__main__":
+    pass
+    #main("jwilso29")

@@ -106,25 +106,35 @@ def main(event, context):
     similar_artists_names = list(similar_artists_names)
     compatible_artists_id_list = data['compatible_artists_id_list'] 
     compatible_artists_id_list = list(compatible_artists_id_list)
+    similar_of_similar_artists = data['similar_of_similar_artists']
+    similar_of_similar_artists = list(similar_of_similar_artists)
+    similar_of_similar_artists_names = data['similar_of_similar_artists_names']
+    similar_of_similar_artists_names = list(similar_of_similar_artists_names)
 
-    similar_artists_tracks = []
+    similar_of_similar_artists_tracks = []
 
-    for id in similar_artists:
-        results = sp.artist_top_tracks(id)
+    for id in similar_of_similar_artists:
+        results = sp.artist_top_tracks(id, country="US")
         if id in compatible_artists_id_list:
             for n in range(0, 9):
-                similar_artists_tracks.append(results['tracks'][n]['id'])
+                similar_of_similar_artists_tracks.append(results['tracks'][n]['id'])
+        elif id in similar_artists:
+            for n in range(0, 6):
+                similar_of_similar_artists_tracks.append(results['tracks'][n]['id'])
         else:
             for n in range(0, 4):
-                similar_artists_tracks.append(results['tracks'][n]['id'])
+                similar_of_similar_artists_tracks.append(results['tracks'][n]['id'])
 
-    similar_artists_tracks.sort(reverse=True, key=popularity_sort)
+    similar_of_similar_artists_tracks = set(similar_of_similar_artists_tracks)
+    similar_of_similar_artists_tracks = list(similar_of_similar_artists_tracks)
+
+    similar_of_similar_artists_tracks.sort(reverse=True, key=popularity_sort)
     
     m = -1
     while True:
-        popularity = popularity_sort(similar_artists_tracks[m])
+        popularity = popularity_sort(similar_of_similar_artists_tracks[m])
         if popularity < 30:
-            similar_artists_tracks.remove(similar_artists_tracks[m])
+            similar_of_similar_artists_tracks.remove(similar_of_similar_artists_tracks[m])
             m -= 1
         else:
             break
@@ -147,9 +157,16 @@ def main(event, context):
 
     add_playlist_desc(sp, my_user_id, this_user, other_user, playlist_id)
 
-    similar_artists_tracks_length = len(similar_artists_tracks)
-    if similar_artists_tracks_length > 0:
-        split_range = int(similar_artists_tracks_length / 100) + 1
+    similar_of_similar_artists_tracks_length = len(similar_of_similar_artists_tracks)
+    if similar_of_similar_artists_tracks_length > 300:
+        split_range = 3
         for i in range(0, split_range):
-            split = split_set(similar_artists_tracks, i, 100)
+            split = split_set(similar_of_similar_artists_tracks, i, 100)
             sp.user_playlist_add_tracks(my_user_id, playlist_id, split)
+    else:
+        split_range = int(similar_of_similar_artists_tracks_length / 100) + 1
+        for i in range(0, split_range):
+            split = split_set(similar_of_similar_artists_tracks, i, 100)
+            sp.user_playlist_add_tracks(my_user_id, playlist_id, split)
+            
+    return similar_of_similar_artists_tracks_length

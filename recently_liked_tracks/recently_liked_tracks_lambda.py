@@ -44,7 +44,7 @@ def create_recently_liked_playlist(sp, user_id, new_playlist_name):
     return return_string['uri']
 
 def get_recently_liked_playlist_id(sp, new_playlist_name, user_id):
-    playlists = sp.current_user_playlists(limit=10) # must keep the new music playlist at the top if you're going to run it again
+    playlists = sp.current_user_playlists(limit=5) # must keep the new music playlist at the top if you're going to run it again
     playlist_id = ''
     for playlist in playlists['items']:
         if playlist['name'] == new_playlist_name:
@@ -134,7 +134,10 @@ def main(event, context):
     
     total_tracks_set_length = len(total_tracks_set)
     if total_tracks_set_length > 0:
-        split_range = int(total_tracks_set_length / 100) + 1
+        if total_tracks_set_length % 100 == 0:
+            split_range = int(total_tracks_set_length / 100)
+        else:
+            split_range = int(total_tracks_set_length / 100) + 1
         for i in range(0, split_range):
             split = split_set(total_tracks_set, i)
             sp.user_playlist_add_tracks(user_id, playlist_id, split)
