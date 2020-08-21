@@ -5,8 +5,8 @@ import json
 
 
 def spotipy_token(scope, username):
-    env_file = r'D:/Users/john/Documents/python_files/SpotifyAPI/'
-    project_folder = os.path.expanduser(env_file)
+    env_path = r'D:/Users/john/Documents/python_files/SpotifyAPI/'
+    project_folder = os.path.expanduser(env_path)
     load_dotenv(os.path.join(project_folder, '.env'))
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
