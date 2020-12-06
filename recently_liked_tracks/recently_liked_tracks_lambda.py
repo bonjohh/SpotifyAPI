@@ -29,11 +29,21 @@ def spotipy_token(event):
     return token
 
 
-def show_tracks(results, total_tracks_list):
+def show_tracks(results, total_tracks_list, two_years_ago):
     for item in results['items']:
         track = item['track']
-        total_tracks_list.append(track['uri'])
+        if track['album']['release_date'] > two_years_ago:
+            total_tracks_list.append(track['uri'])
     return total_tracks_list
+
+
+def get_two_years_ago():
+    EST = pytz.timezone('America/New_York')
+    two_years_ago = datetime.datetime.now(EST)
+    two_years = datetime.timedelta(days=1000)
+    two_years_ago -= two_years
+    two_years_ago = two_years_ago.strftime("%Y/%m/%d")
+    return two_years_ago
 
 
 def get_playlist_date():
@@ -140,13 +150,14 @@ def main(event, context):
         sp.user_playlist_remove_all_occurrences_of_tracks(user_id,
                                                           playlist_id, split)
 
+    two_years_ago = get_two_years_ago()
     results = sp.current_user_saved_tracks()
-    total_tracks_list = show_tracks(results, total_tracks_list)
+    total_tracks_list = show_tracks(results, total_tracks_list, two_years_ago)
 
     stop_after_next = False
     while True:
         results = sp.next(results)
-        total_tracks_list = show_tracks(results, total_tracks_list)
+        total_tracks_list = show_tracks(results, total_tracks_list, two_years_ago)
         last_added_date = get_last_date_added(results)
         if last_added_date < playlist_date:
             if stop_after_next:

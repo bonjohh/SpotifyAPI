@@ -6,7 +6,7 @@ import random
 import time
 
 def spotipy_token(scope, username):
-    project_folder = os.path.expanduser('D:/Documents/Python_Course/SpotifyAPI')
+    project_folder = os.path.expanduser('D:/Documents/Python_Git_SpotifyAPI_2')
     load_dotenv(os.path.join(project_folder, '.env'))
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
