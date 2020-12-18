@@ -3,6 +3,7 @@ import spotipy
 from dotenv import load_dotenv
 import pprint
 import difflib
+from itunesLibrary import library
 
 
 class Track:
@@ -33,7 +34,7 @@ def spotipy_token(scope, username):
     return token
 
 
-def read_text_file(text_path):
+def read_text_file(xml_path, playlist): 
     text_file = open(text_path, 'r', encoding='utf-8') 
     text_file_lines = text_file.readlines()
 
@@ -110,18 +111,18 @@ def spotify_search(track, sp):
                     print("not found", track.track_name, track.album_name, track.artist_name, sep='\t')#########################
 
 
-def main(user_id, text_path):
+def main(user_id, text_path, playlist):
     scope = 'user-top-read' ##################
     token = spotipy_token(scope, user_id)
     sp = spotipy.Spotify(auth=token)
 
-    tracks_list = read_text_file(text_path)
+    tracks_list = read_text_file(text_path, playlist)
     
-    for track in tracks_list:
-        spotify_search(track, sp)
+    #for track in tracks_list:
+    #    spotify_search(track, sp)
 
 
 if __name__ == "__main__":
     #pass
-    text_path = r'D:\Documents\iTunesLibraryFiles\Altos_08.31.2020.txt'
-    main("jwilso29", text_path)
+    text_path = r'D:\Documents\iTunesLibraryFiles\iTunes Music Library - 12.6.20.xml'
+    main("jwilso29", text_path, "Altos")
