@@ -11,6 +11,7 @@ def spotipy_token(scope, username):
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
 
+
 def split_set(total_tracks_set, i, x):
     tracks_list = list(total_tracks_set)
     if i == 0:
