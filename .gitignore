@@ -131,3 +131,4 @@ dmypy.json
 # spotify files
 .cache-jwilso29
 .vs/
+.vscode/settings.json
