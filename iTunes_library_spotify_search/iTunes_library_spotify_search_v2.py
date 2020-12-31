@@ -20,10 +20,7 @@ def spotify_search(playlist_item, year, sp):
     if str(playlist_item.artist).__contains__(","):
         commaInt = str(playlist_item.artist).find(",")
         playlist_artist = str(playlist_item.artist)[:commaInt]
-    if str(playlist_item.artist).__contains__("&"):
-        playlist_artist = str(playlist_item.artist).replace(" &", ",")
-    else:
-        playlist_artist = playlist_item.artist
+    playlist_artist = playlist_item.artist
     if str(playlist_item.artist).__contains__("\'"):
         playlist_artist = str(playlist_item.artist).replace("\'","")
     playlist_album = playlist_item.album
@@ -42,6 +39,9 @@ def spotify_search(playlist_item, year, sp):
     elif str(playlist_item.title).__contains__("(ft"):
         parenInt = str(playlist_item.title).find("(ft")
         playlist_title = str(playlist_item.title)[:parenInt]
+    elif str(playlist_item.title).__contains__("(Ft"):
+        parenInt = str(playlist_item.title).find("(Ft")
+        playlist_title = str(playlist_item.title)[:parenInt]
     else:
         if str(playlist_item.title).__contains__("Feat"):
             featInt = str(playlist_item.title).find("Feat")
@@ -55,6 +55,12 @@ def spotify_search(playlist_item, year, sp):
         elif str(playlist_item.title).__contains__("Ft"):
             ftInt = str(playlist_item.title).find("Ft")
             playlist_title = str(playlist_item.title)[:ftInt]
+    if str(playlist_title).__contains__("(Prod"):
+        prodInt = str(playlist_title).find("(Prod")
+        playlist_title = str(playlist_title)[:prodInt]
+    elif str(playlist_title).__contains__("(prod"):
+        prodInt = str(playlist_title).find("(prod")
+        playlist_title = str(playlist_title)[:prodInt]
     if str(playlist_item.title).__contains__("\'"):
         playlist_title = str(playlist_item.title).replace("\'","")
     if playlist_album != None:
@@ -131,7 +137,7 @@ def main(user_id, xml_path, playlist_name, year):
 if __name__ == "__main__":
     #pass
     # xml_path = r'D:\Documents\iTunesLibraryFiles\Altos_08.31.2020.xml'
-    xml_path = r'/Users/john/Downloads/Spotify Search - Year - 2019.xml'
-    main("jwilso29", xml_path, "Spotify Search - Year", "2019")
+    xml_path = r'/Users/john/Downloads/Spotify Search - Year - 2016.xml'
+    main("jwilso29", xml_path, "Spotify Search - Year", "2016")
 
     # only use with year playlists

@@ -8,11 +8,11 @@ import time
 class Track:
     __slots__ = ['uri', 'track_name', 'album_name', 'artist_name', 'track_id', \
         'popularity', 'acousticness', 'energy', 'valence', 'loudness', 'tempo', \
-        'danceability', 'liveness', 'instrumentalness']
+        'danceability', 'liveness', 'instrumentalness', 'artist_popularity']
 
     def __init__(self, uri, track_name, album_name, artist_name, \
         track_id, popularity, acousticness, energy, valence, \
-        loudness, tempo, danceability,liveness, instrumentalness):
+        loudness, tempo, danceability,liveness, instrumentalness, artist_popularity):
         self.uri = uri
         self.track_name = track_name
         self.album_name = album_name
@@ -27,6 +27,7 @@ class Track:
         self.danceability = danceability
         self.liveness = liveness
         self.instrumentalness = instrumentalness
+        self.artist_popularity = artist_popularity
 
     def __eq__(self, other):
         return self.uri == other.uri
@@ -35,7 +36,8 @@ class Track:
         return hash(self.uri)
 
 def spotipy_token(scope, username):
-    project_folder = os.path.expanduser('D:/Documents/Python_Course/SpotifyAPI')
+    # project_folder = os.path.expanduser('D:/Documents/Python_Git_SpotifyAPI_2')
+    project_folder = os.path.expanduser('/Users/john/Documents/python_files')
     load_dotenv(os.path.join(project_folder, '.env'))
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
@@ -57,11 +59,18 @@ def populate_total_track_list(sp, results, total_tracks_list):
         danceability = 0.0
         liveness = 0.0
         instrumentalness = 0.0
+        artist_popularity = get_artist_popularity(sp, track['artists'][0]['uri'])
         temp_track_object = Track(uri, track_name, album_name, \
             artist_name, track_id, popularity, acousticness, \
-            energy, valence, loudness, tempo, danceability, liveness, instrumentalness)
+            energy, valence, loudness, tempo, danceability, liveness, instrumentalness, artist_popularity)
         total_tracks_list.append(temp_track_object)
     return total_tracks_list
+
+
+def get_artist_popularity(sp, artist_uri):
+    results = sp.artist(artist_uri)
+    return results['popularity']
+
 
 def populate_total_track_list_af(sp, total_tracks_list):
     num_type = len(total_tracks_list) / 100
@@ -220,12 +229,14 @@ def main(user_id, saved_bool, playlist_bool, setting):
         saved_tracks_results = sp.current_user_saved_tracks(limit=50)
         total_tracks_list = populate_total_track_list(sp, saved_tracks_results, total_tracks_list)
         while saved_tracks_results['next']:
+            time.sleep(.05)
             saved_tracks_results = sp.next(saved_tracks_results)
             total_tracks_list = populate_total_track_list(sp, saved_tracks_results, total_tracks_list)
 
     if playlist_bool == True:
         playlists = sp.user_playlists(user_id)
         while playlists:
+            time.sleep(.05)
             for playlist in playlists['items']:
                 playlist_results = sp.playlist(playlist['id'], fields="tracks,next")
                 tracks = playlist_results['tracks']
@@ -250,25 +261,29 @@ def main(user_id, saved_bool, playlist_bool, setting):
             if track.acousticness > 0.6 \
                 and track.energy < 0.3 \
                 and track.loudness < -10 \
-                and track.tempo < 100:
+                and track.tempo < 100 \
+                and track.popularity > track.artist_popularity * .7:
                 setting_tracks_objects_list.append(track)
         elif setting == "exercise":
             if track.acousticness < 0.2 \
                 and track.energy > 0.8 \
                 and track.loudness > -10 \
                 and track.tempo > 130 \
-                and track.danceability > 0.5:
+                and track.danceability > 0.5 \
+                and track.popularity > track.artist_popularity * .7:
                 setting_tracks_objects_list.append(track)
         elif setting == "pregame":
             if track.energy > 0.4 \
                 and track.loudness > -10 \
                 and track.tempo > 110 \
                 and track.valence > 0.5 \
-                and track.danceability > 0.7:
+                and track.danceability > 0.7 \
+                and track.popularity > track.artist_popularity * .7:
                 setting_tracks_objects_list.append(track)
         elif setting == "live":
-            if track.liveness > 0.6 \
-                and track.instrumentalness > 0.05:
+            if (track.liveness > 0.6 \
+                and track.instrumentalness > 0.05) \
+                or track.track_name.__contains__('- Live'):
                 setting_tracks_objects_list.append(track)
                     
     # for track in setting_tracks_objects_list:
@@ -304,8 +319,12 @@ def main(user_id, saved_bool, playlist_bool, setting):
     add_playlist_desc(sp, user_id, playlist_id, setting)
 
     setting_tracks_list_length = len(setting_tracks_list)
-    if setting_tracks_list_length > 200:
-        split_range = 2
+    if setting == 'live':
+        max_amount = 1000
+    else:
+        max_amount = 200
+    if setting_tracks_list_length > max_amount:
+        split_range = max_amount / 100
         for i in range(0, split_range):
             split = split_set(setting_tracks_list, i, 100)
             sp.user_playlist_add_tracks(user_id, playlist_id, split)
@@ -319,7 +338,7 @@ def main(user_id, saved_bool, playlist_bool, setting):
 
 if __name__ == "__main__":
     # pass
-    main("jwilso29", True, False, setting="morning")
+    # main("jwilso29", True, False, setting="morning")
     # main("jwilso29", True, False, setting="exercise")
     # main("jwilso29", True, False, setting="pregame")
-    # main("jwilso29", True, False, setting="live")
+    main("jwilso29", True, False, setting="live")
