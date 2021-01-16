@@ -1,7 +1,6 @@
 import os
 from itunesLibrary import library
 from dotenv import load_dotenv
-import os
 import spotipy
 import difflib
 import time
@@ -136,7 +135,6 @@ def main(user_id, xml_path, playlist_name, year):
 
 if __name__ == "__main__":
     #pass
-    # xml_path = r'D:\Documents\iTunesLibraryFiles\Altos_08.31.2020.xml'
     xml_path = r'/Users/john/Downloads/Spotify Search - Year - 2016.xml'
     main("jwilso29", xml_path, "Spotify Search - Year", "2016")
 

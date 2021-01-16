@@ -167,13 +167,18 @@ def main(user_id, playlist_album_uri, year, liked):
 
 if __name__ == "__main__":
     #pass
-    # playlist_album_uri = 'spotify:playlist:7FX7Xi04nCe3kZ2cFVR9im' #2020
-    # playlist_album_uri = 'spotify:playlist:3qGW530jk1N1grN6ALyWvz' # 2020 - All
-    # playlist_album_uri = 'spotify:playlist:5AZJlZbLvj1n1imbDoYDk6' # 2019 - iTunes
-    # playlist_album_uri = 'spotify:playlist:3biiXSq79NsTGMYU4plMfc' # 2019 - Missed
-    # playlist_album_uri = 'spotify:playlist:3wIBckGyFc4Y54ALUZBtsz' # 2018 - iTunes
-    # playlist_album_uri = 'spotify:playlist:3eE07mckCcmB57gApAvRO1' # 2018 - Missed
-    playlist_album_uri = 'spotify:playlist:2SsPNWZpOZQ5mzYDVf2MSL' # 1970's
-    year = '1970-1980'
-    liked = False
+    #playlist_album_uri = 'spotify:playlist:7FX7Xi04nCe3kZ2cFVR9im' #2020
+    #playlist_album_uri = 'spotify:playlist:3qGW530jk1N1grN6ALyWvz' # 2020 - All
+    #playlist_album_uri = 'spotify:playlist:5AZJlZbLvj1n1imbDoYDk6' # 2019 - iTunes
+    #playlist_album_uri = 'spotify:playlist:3biiXSq79NsTGMYU4plMfc' # 2019 - Missed
+    #playlist_album_uri = 'spotify:playlist:3wIBckGyFc4Y54ALUZBtsz' # 2018 - iTunes
+    #playlist_album_uri = 'spotify:playlist:3eE07mckCcmB57gApAvRO1' # 2018 - Missed
+    #playlist_album_uri = 'spotify:playlist:0gP5Gb87W5oMoDqMKdsD2X' # Pre 2018 - Missed
+    #playlist_album_uri = 'spotify:playlist:1JFZtmaSwKZlU2e0nRYopx' # 2017 - iTunes
+    #playlist_album_uri = 'spotify:playlist:5Q4Uq6hNzY1v987SMoB7xR' # 2016 - iTunes
+    #playlist_album_uri = 'spotify:playlist:6BT939wVcwH9IrAMKY9FOP' # 2015 - iTunes
+    #playlist_album_uri = 'spotify:playlist:3wsIo8Os9nb6riCznGRWxf' # 2014 - iTunes
+    #playlist_album_uri = 'spotify:playlist:2SsPNWZpOZQ5mzYDVf2MSL' # 1970's
+    year = ''
+    liked = True
     main("jwilso29", playlist_album_uri, year, liked)
