@@ -151,10 +151,10 @@ def main(user_id, playlist_album_uri, year, liked):
         time.sleep(.1)
         results = sp.album(album.album_uri)
         album.year = results['release_date'][:4]
-        if year != '' and not year.__contains__('-') and int(album.year) != int(year):
+        if year != '' and not year.__contains__('-') and int(album.year) != int(year) and not album.album_name.__contains__(year):
             print('wrong year: ', album.album_name, album.artist_name, album.year, sep='\t\t')#########################))
         elif year_range.__len__() > 0:
-            if year != '' and year.__contains__('-') and not year_range.__contains__(int(album.year)):
+            if year != '' and year.__contains__('-') and not year_range.__contains__(int(album.year)) and not album.album_name.__contains__(year):
                 if not has_numbers(sp, album.album_uri, year_range, album):
                     print('wrong year: ', album.album_name, album.artist_name, album.year, sep='\t\t')#########################))
         album.album_type = results['album_type']
@@ -179,6 +179,8 @@ if __name__ == "__main__":
     #playlist_album_uri = 'spotify:playlist:6BT939wVcwH9IrAMKY9FOP' # 2015 - iTunes
     #playlist_album_uri = 'spotify:playlist:3wsIo8Os9nb6riCznGRWxf' # 2014 - iTunes
     #playlist_album_uri = 'spotify:playlist:2SsPNWZpOZQ5mzYDVf2MSL' # 1970's
-    year = ''
+    #playlist_album_uri = 'spotify::playlist:424uNymCUc73Qs1NUvmAoR' # 2011 - iTunes
+    playlist_album_uri = 'spotify::playlist:63iH3RRoqd5CghWUkIAgN4' #2001 - iTunes
+    year = '2001'
     liked = True
     main("jwilso29", playlist_album_uri, year, liked)

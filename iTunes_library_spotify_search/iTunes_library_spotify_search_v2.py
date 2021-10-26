@@ -109,7 +109,7 @@ def spotify_search(playlist_item, year, sp):
                             if str(closest_album).upper() == str(item['album']['name']).replace("\'", "").upper() \
                                 and str(item['artists'][0]['name']).replace("\'", "").upper() in str(closest_artist).upper() \
                                 and year in item['album']['release_date']:
-                                #print("found2 ", playlist_title, playlist_album, playlist_artist, sep='\t')#########################
+                                print("found2 ", playlist_title, playlist_album, playlist_artist, sep='\t')#########################
                                 found_bool = True
                                 break
                         if not found_bool:
@@ -135,7 +135,7 @@ def main(user_id, xml_path, playlist_name, year):
 
 if __name__ == "__main__":
     #pass
-    xml_path = r'/Users/john/Downloads/Spotify Search - Year - 2016.xml'
-    main("jwilso29", xml_path, "Spotify Search - Year", "2016")
+    xml_path = r'D:\Downloads\2001_Loved.xml'
+    main("jwilso29", xml_path, "2001", "2001")
 
     # only use with year playlists
