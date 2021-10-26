@@ -59,6 +59,7 @@ def populate_total_track_list(sp, results, total_tracks_list):
         danceability = 0.0
         liveness = 0.0
         instrumentalness = 0.0
+        time.sleep(.1)
         artist_popularity = get_artist_popularity(sp, track['artists'][0]['uri'])
         temp_track_object = Track(uri, track_name, album_name, \
             artist_name, track_id, popularity, acousticness, \
@@ -229,14 +230,14 @@ def main(user_id, saved_bool, playlist_bool, setting):
         saved_tracks_results = sp.current_user_saved_tracks(limit=50)
         total_tracks_list = populate_total_track_list(sp, saved_tracks_results, total_tracks_list)
         while saved_tracks_results['next']:
-            time.sleep(.05)
+            time.sleep(.2)
             saved_tracks_results = sp.next(saved_tracks_results)
             total_tracks_list = populate_total_track_list(sp, saved_tracks_results, total_tracks_list)
 
     if playlist_bool == True:
         playlists = sp.user_playlists(user_id)
         while playlists:
-            time.sleep(.05)
+            time.sleep(.2)
             for playlist in playlists['items']:
                 playlist_results = sp.playlist(playlist['id'], fields="tracks,next")
                 tracks = playlist_results['tracks']
@@ -339,6 +340,6 @@ def main(user_id, saved_bool, playlist_bool, setting):
 if __name__ == "__main__":
     # pass
     # main("jwilso29", True, False, setting="morning")
-    # main("jwilso29", True, False, setting="exercise")
+    main("jwilso29", True, False, setting="exercise")
     # main("jwilso29", True, False, setting="pregame")
-    main("jwilso29", True, False, setting="live")
+    # main("jwilso29", True, False, setting="live")
