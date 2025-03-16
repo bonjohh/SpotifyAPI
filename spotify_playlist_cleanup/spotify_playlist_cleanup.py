@@ -10,8 +10,8 @@ import re
 
 
 def spotipy_token(scope, username):
-    # project_folder = os.path.expanduser('D:/Documents/Python_Git_SpotifyAPI_2')
-    project_folder = os.path.expanduser('/Users/john/Documents/python_files')
+    project_folder = os.path.expanduser('D:/Documents/Python_Git_SpotifyAPI_2')
+    #project_folder = os.path.expanduser('/Users/john/Documents/python_files')
     load_dotenv(os.path.join(project_folder, '.env'))
     token = spotipy.util.prompt_for_user_token(username, scope)
     return token
@@ -167,6 +167,8 @@ def main(user_id, playlist_album_uri, year, liked):
 
 if __name__ == "__main__":
     #pass
+    playlist_album_uri = 'spotify:playlist:05Bc0XJTuIGjNDs7jAlJYh' #2022
+    #playlist_album_uri = 'spotify:playlist:6VFWGkttcDT7Z42GLpPNAD' #2021
     #playlist_album_uri = 'spotify:playlist:7FX7Xi04nCe3kZ2cFVR9im' #2020
     #playlist_album_uri = 'spotify:playlist:3qGW530jk1N1grN6ALyWvz' # 2020 - All
     #playlist_album_uri = 'spotify:playlist:5AZJlZbLvj1n1imbDoYDk6' # 2019 - iTunes
@@ -180,7 +182,8 @@ if __name__ == "__main__":
     #playlist_album_uri = 'spotify:playlist:3wsIo8Os9nb6riCznGRWxf' # 2014 - iTunes
     #playlist_album_uri = 'spotify:playlist:2SsPNWZpOZQ5mzYDVf2MSL' # 1970's
     #playlist_album_uri = 'spotify::playlist:424uNymCUc73Qs1NUvmAoR' # 2011 - iTunes
-    playlist_album_uri = 'spotify::playlist:63iH3RRoqd5CghWUkIAgN4' #2001 - iTunes
-    year = '2001'
+    #playlist_album_uri = 'spotify::playlist:63iH3RRoqd5CghWUkIAgN4' #2001 - iTunes
+    #playlist_album_uri = 'spotify::playlist:0USehWgmaKUo60qfWhdgf0' #2002 - iTunes
+    year = '2022'
     liked = True
     main("jwilso29", playlist_album_uri, year, liked)

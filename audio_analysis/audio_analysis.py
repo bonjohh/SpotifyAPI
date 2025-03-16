@@ -8,7 +8,7 @@ from time import time
 def spotipy_token(scope, username):
     project_folder = os.path.expanduser('D:/Documents/Python_Course/SpotifyAPI')
     load_dotenv(os.path.join(project_folder, '.env'))
-    token = spotipy.util.prompt_for_user_token(username, scope)
+    token = 'BQATt35y9lFYl3uq5pcNJey65-gqGPMfikxnS72xVyhMMn59DPtV-vNrq7gZu2iOk19XstCVPv5i1MshCbOQhGPwEMUlgQcZtkcV_eXkIW8fNrU9kPOMUphy2teYhSXOrQF_CiQt6tGrFFI0IeZcIx-x_EzfkjfrZk1zn6FDTTXyR5Rh42-dzKOyGeFOqYOrRTjwADDIYG4NDUVNOjGJXhY5MLo0Cr6OEw'#spotipy.util.prompt_for_user_token(username, scope)
     return token
 
 def populate_total_track_list(results, total_tracks_list):
@@ -152,7 +152,7 @@ def main(user_id, saved_bool, playlist_bool, setting):
     total_tracks_list = []
 
     if saved_bool == True:
-        saved_tracks_results = sp.current_user_saved_tracks(limit=50)
+        saved_tracks_results = sp.current_user_saved_tracks(limit=10)
         total_tracks_list = populate_total_track_list(saved_tracks_results, total_tracks_list)
         while saved_tracks_results['next']:
             saved_tracks_results = sp.next(saved_tracks_results)
